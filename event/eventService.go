@@ -1,18 +1,14 @@
 package event
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 type defaultService struct {
-	eventListenerMap map[string][]*ListenerInfo
-	listenerMap      map[string]*ListenerInfo
+	eventListenerMap map[string][]ListenerInfo
+	listenerMap      map[string]ListenerInfo
 	mutex            *sync.Mutex
-}
-
-//ListenerInfo provides the name and callback function that will be invoked
-type ListenerInfo struct {
-	Name      string
-	Callback  CallbackFunc
-	EventList map[string]bool
 }
 
 var service Service
@@ -27,15 +23,12 @@ type Service interface {
 	UnRegisterListenerFromEvents(listenerName string, eventNames []string) bool
 }
 
-//CallbackFunc defines the function signature that is invoked when the event is triggered
-type CallbackFunc func(event Event)
-
 //GetInstance returns the intance of the event service
 func GetInstance() Service {
 	if service == nil {
 		service = &defaultService{
-			eventListenerMap: make(map[string][]*ListenerInfo),
-			listenerMap:      make(map[string]*ListenerInfo),
+			eventListenerMap: make(map[string][]ListenerInfo),
+			listenerMap:      make(map[string]ListenerInfo),
 			mutex:            &sync.Mutex{},
 		}
 	}
@@ -68,21 +61,22 @@ func (d defaultService) TriggerEventAsync(event Event) *sync.WaitGroup {
 }
 
 func (d defaultService) RegisterListener(listenerInfo ListenerInfo) bool {
-	if registeredListenerInfo, ok := d.listenerMap[listenerInfo.Name]; ok {
-		for eventName := range listenerInfo.EventList {
-			if _, ok := registeredListenerInfo.EventList[eventName]; !ok {
-				registeredListenerInfo.EventList[eventName] = true
+	fmt.Println("Name of the event listener = " + listenerInfo.GetName())
+	if registeredListenerInfo, ok := d.listenerMap[listenerInfo.GetName()]; ok {
+		for eventName := range listenerInfo.GetEventNameMap() {
+			if _, ok := registeredListenerInfo.GetEventNameMap()[eventName]; !ok {
+				registeredListenerInfo.GetEventNameMap()[eventName] = true
 				registeredListenerInfoList := d.eventListenerMap[eventName]
 				d.eventListenerMap[eventName] = append(registeredListenerInfoList, registeredListenerInfo)
 			}
 		}
 	} else {
-		d.listenerMap[listenerInfo.Name] = &listenerInfo
-		for eventName := range listenerInfo.EventList {
+		d.listenerMap[listenerInfo.GetName()] = listenerInfo
+		for eventName := range listenerInfo.GetEventNameMap() {
 			if registeredListenerInfoList, ok := d.eventListenerMap[eventName]; ok {
-				d.eventListenerMap[eventName] = append(registeredListenerInfoList, &listenerInfo)
+				d.eventListenerMap[eventName] = append(registeredListenerInfoList, listenerInfo)
 			} else {
-				d.eventListenerMap[eventName] = []*ListenerInfo{&listenerInfo}
+				d.eventListenerMap[eventName] = []ListenerInfo{listenerInfo}
 			}
 		}
 	}
@@ -91,7 +85,7 @@ func (d defaultService) RegisterListener(listenerInfo ListenerInfo) bool {
 
 func (d defaultService) UnRegisterListener(listenerName string) bool {
 	if listenerInfo, ok := d.listenerMap[listenerName]; ok {
-		for eventName := range listenerInfo.EventList {
+		for eventName := range listenerInfo.GetEventNameMap() {
 			registeredListenerInfoList := d.eventListenerMap[eventName]
 			if len(registeredListenerInfoList) == 1 {
 				delete(d.eventListenerMap, eventName)
@@ -123,9 +117,9 @@ func (d defaultService) UnRegisterListenerFromEvents(listenerName string, eventN
 					}
 				}
 			}
-			if len(listenerInfo.EventList) == 0 {
+			if len(listenerInfo.GetEventNameMap()) == 0 {
 				//Delete the listenerInfo as there there is no event associated with the listener
-				delete(listenerInfo.EventList, eventName)
+				delete(d.listenerMap, eventName)
 			}
 		}
 	}
