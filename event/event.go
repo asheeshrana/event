@@ -1,51 +1,39 @@
 package event
 
-//EventInterface defines the interface of the event
-type EventInterface interface {
-	GetEventId() int
-	GetEventName() string	
-	GetDescription() string
-	GetSourceId() int
+//Event defines the interface of the event
+type Event interface {
+	GetName() string
 	GetSourceName() string
-	GetData() interface {}
-	SetData(interface{}) EventInterface
+	SetSourceName(sourceName string) Event
+	GetData() interface{}
+	SetData(interface{}) Event
 }
 
 //DefaultEvent defines the default event implementation available
 type defaultEvent struct {
-	eventId *int
-	eventName *string
-	description *string
-	sourceId *int
+	eventName  *string
 	sourceName *string
-	data interface {}
+	data       interface{}
 }
 
-func (e defaultEvent) GetEventId() int {
-	return *(e.eventId)
-}
-
-func (e defaultEvent) GetEventName() string {
+func (e defaultEvent) GetName() string {
 	return *(e.eventName)
-}
-
-func (e defaultEvent) GetDescription() string {
-	return *(e.description)
-}
-
-func (e defaultEvent) GetSourceId() int {
-	return *(e.sourceId)
 }
 
 func (e defaultEvent) GetSourceName() string {
 	return *(e.sourceName)
 }
 
+func (e defaultEvent) SetSourceName(sourceName string) Event {
+	e.sourceName = &sourceName
+	return e
+}
+
 func (e defaultEvent) GetData() interface{} {
 	return e.data
 }
 
-func (e defaultEvent) SetData(data interface{}) EventInterface {
+func (e defaultEvent) SetData(data interface{}) Event {
 	e.data = data
 	return e
 }
