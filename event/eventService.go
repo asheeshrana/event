@@ -1,3 +1,11 @@
+/*
+TODO:
+	1. Add validations such as
+		- Use default callback if no callback function is defined (this will give ability for very basic debug)
+	2. Create a register method to register a different implementation of the EventService (maybe even as a side effect??)
+	3. Add tests
+*/
+
 package event
 
 import (
@@ -36,7 +44,7 @@ func GetInstance() Service {
 }
 
 func (d defaultService) CreateEvent(eventName string) Event {
-	return &defaultEvent{eventName: &eventName}
+	return &defaultEvent{eventName: eventName}
 }
 
 func (d defaultService) TriggerEventSync(event Event) bool {

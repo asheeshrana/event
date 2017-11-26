@@ -9,10 +9,12 @@ import (
 func main() {
 	eventService := event.GetInstance()
 	startEvent := eventService.CreateEvent("StartEvent")
+	startEvent.SetSourceName("Main")
 	endEvent := eventService.CreateEvent("EndEvent")
+	endEvent.SetSourceName("Main")
 	listenerInfo := &event.DefaultListenerInfo{}
 	listenerInfo.SetName("GenericListener")
-	listenerInfo.SetCallback(eventCallBack)
+	listenerInfo.SetCallback(listenerInfo.DefaultCallback)
 	listenerInfo.SetEventNameMap(map[string]bool{
 		"StartEvent": true,
 		"EndEvent":   true,
